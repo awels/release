@@ -14,8 +14,14 @@ chain:
       echo "Source git commit is ${PR_SHA}"
       response=$(curl -L --head --write-out '%{http_code}' --silent --output /dev/null https://raw.githubusercontent.com/openshift/kubevirt-csi-driver/${PR_SHA}/hack/test-driver.yaml)
       if [ $response != "200" ]; then
-        echo "Getting test-driver.yaml from the master branch"
-        curl -L -o ${SHARED_DIR}/${TEST_CSI_DRIVER_MANIFEST} https://raw.githubusercontent.com/openshift/kubevirt-csi-driver/master/hack/test-driver.yaml
+        version=$(oc version | grep "Server Version: " | awk '{ print $3 }' | sed 's/\.[^.]*$//')
+        if [ -z $version ]; then
+          version="master"
+        else
+          version="release-${version}"
+        fi
+        echo "Getting test-driver.yaml from the ${version} branch"
+        curl -L -o ${SHARED_DIR}/${TEST_CSI_DRIVER_MANIFEST} https://raw.githubusercontent.com/openshift/kubevirt-csi-driver/${version}/hack/test-driver.yaml
       else
          echo "Getting test-driver.yaml from PR"
         curl -L -o ${SHARED_DIR}/${TEST_CSI_DRIVER_MANIFEST} https://raw.githubusercontent.com/openshift/kubevirt-csi-driver/${PR_SHA}/hack/test-driver.yaml
